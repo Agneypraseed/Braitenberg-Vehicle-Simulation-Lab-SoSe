@@ -39,21 +39,23 @@ class Vehicle:
         # sensor
         self.sensor_radius = 15
         self.sensor_offset = self.radius + self.sensor_radius
-        self.sensor_position = self.position + pygame.math.Vector2(0,-self.sensor_offset)        
+        self.sensor_position = self.position + \
+            pygame.math.Vector2(0, -self.sensor_offset).rotate(self.direction)
         self.sensor_color = GREEN
 
     def draw(self, surface):
         pygame.draw.circle(surface, self.color, self.position, self.radius)
 
-        self.sensor_position = self.position + pygame.math.Vector2(0,-self.sensor_offset).rotate(self.direction)
         pygame.draw.circle(surface, self.sensor_color,
                            self.sensor_position, self.sensor_radius)
-        
-    def move(self):
-        direction =  pygame.math.Vector2(0,-1).rotate(self.direction)
-        magnitude = 6
-        self.position += direction * magnitude
 
+    def move(self):
+        direction = pygame.math.Vector2(0, -1).rotate(self.direction)
+        distance = 1
+        self.position += direction * distance
+        self.direction += 1
+        self.sensor_position = self.position + \
+            pygame.math.Vector2(0, -self.sensor_offset).rotate(self.direction)
 
 
 sun = Circle((600, 300), radius=30, color=YELLOW)
