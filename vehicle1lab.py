@@ -59,17 +59,16 @@ class Vehicle:
     def move(self, sun_position):
         direction = pygame.math.Vector2(0, -1).rotate(self.direction)
         distance = self.calculate_sensor_position(sun_position)
-
         speed = self.speed_scalling * (1/distance)
+
+        self.position += direction * speed
+        self.sensor_position = self.position + \
+            pygame.math.Vector2(0, -self.sensor_offset).rotate(self.direction)
 
         # debug/print info
         text = font.render(
             f"Distance to sun: {distance:.2f} \n speed : {speed}", True, WHITE)
         screen.blit(text, (10, 10))
-
-        self.position += direction * speed
-        self.sensor_position = self.position + \
-            pygame.math.Vector2(0, -self.sensor_offset).rotate(self.direction)
 
 
 sun = Circle((600, 300), radius=30, color=YELLOW)
