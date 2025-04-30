@@ -6,6 +6,9 @@ WIDTH, HEIGHT = 1200, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Braitenberg Vehicle 1 Simulation")
 
+pygame.font.init()
+font = pygame.font.SysFont("Arial", 24)
+
 clock = pygame.time.Clock()
 fps = 60
 
@@ -35,6 +38,7 @@ class Vehicle:
         self.direction = direction
         self.radius = radius
         self.color = color
+        self.speed_scalling = 50
 
         # sensor
         self.sensor_radius = 15
@@ -49,17 +53,27 @@ class Vehicle:
         pygame.draw.circle(surface, self.sensor_color,
                            self.sensor_position, self.sensor_radius)
 
-    def move(self):
+    def calculate_sensor_position(self, sun_position):
+        return self.sensor_position.distance_to(sun_position)
+
+    def move(self, sun_position):
         direction = pygame.math.Vector2(0, -1).rotate(self.direction)
-        distance = 1
-        self.position += direction * distance
-        self.direction += 1
+        distance = self.calculate_sensor_position(sun_position)
+
+        speed = self.speed_scalling * (1/distance)
+
+        # debug/print info
+        text = font.render(
+            f"Distance to sun: {distance:.2f} \n speed : {speed}", True, WHITE)
+        screen.blit(text, (10, 10))
+
+        self.position += direction * speed
         self.sensor_position = self.position + \
             pygame.math.Vector2(0, -self.sensor_offset).rotate(self.direction)
 
 
 sun = Circle((600, 300), radius=30, color=YELLOW)
-vehicle = Vehicle((300, 500), 0)
+vehicle = Vehicle((300, 500), 45)
 
 running = True
 while running:
@@ -70,7 +84,7 @@ while running:
     screen.fill((0, 0, 0))  # Fill with black background
     # circle.move()
     sun.draw(screen)
-    vehicle.move()
+    vehicle.move(sun.position)
     vehicle.draw(screen)
 
     pygame.display.flip()
