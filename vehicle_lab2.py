@@ -5,7 +5,7 @@ pygame.init()
 
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Braitenberg Vehicle 2 Simulation")
+pygame.display.set_caption("Braitenberg Vehicle 1 Simulation with Collision")
 
 pygame.font.init()
 font = pygame.font.SysFont("Arial", 24)
@@ -35,7 +35,8 @@ class Vehicle:
         self.direction = direction
         self.radius = radius
         self.color = color
-        self.speed_scalling = 50
+        self.speed_scalling = 100
+        self.rotation_scalling = 5
 
         # sensor
         self.sensor_radius = 15
@@ -56,6 +57,15 @@ class Vehicle:
     def calculate_sensor_position(self, sun_position):
         return self.sensor_position.distance_to(sun_position)
 
+    def keep_in_bounds(self):
+        """Keep vehicle within screen boundaries"""
+        self.position.x = max(self.radius, min(WIDTH - self.radius, self.position.x))
+        self.position.y = max(self.radius, min(HEIGHT - self.radius, self.position.y))
+
+    def normalize_direction(self):
+        """Normalize direction to be between 0 and 360 degrees"""
+        self.direction = self.direction % 360
+
     def move(self, sun_position):
         direction = pygame.math.Vector2(0, -1).rotate(self.direction)
         distance = self.calculate_sensor_position(sun_position)
@@ -64,6 +74,8 @@ class Vehicle:
         self.position += direction * speed
         self.sensor_position = self.position + \
             pygame.math.Vector2(0, -self.sensor_offset).rotate(self.direction)
+        self.keep_in_bounds()  # Add this line
+        self.normalize_direction()  # Add this line
 
 
 def check_collision(vehicle1, vehicle2):
@@ -77,7 +89,7 @@ sun = Circle((WIDTH//2, HEIGHT//2), radius=30, color=YELLOW)
 vehicles = []
 for _ in range(10):
     vehicle = Vehicle((random.randint(0, WIDTH), random.randint(0, HEIGHT)),
-                      random.randint(0, 360), radius=20, color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
+                      random.randint(0, 360), radius=30, color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
     vehicles.append(vehicle)
 
 last_update_time = 0
@@ -107,8 +119,8 @@ while running:
                 direction1 = pygame.math.Vector2(0, -1).rotate(vehicles[i].direction)
                 direction2 = pygame.math.Vector2(0, -1).rotate(vehicles[j].direction)
 
-                reflected1 = (direction1 - 2 * direction1.dot(collision_vector) * collision_vector).normalize()
-                reflected2 = (direction2 - 2 * direction2.dot(collision_vector) * collision_vector).normalize()
+                reflected1 = (direction1 - 2 * direction1.dot(collision_vector) * collision_vector)
+                reflected2 = (direction2 - 2 * direction2.dot(-collision_vector) * -collision_vector)
 
                 vehicles[i].direction = reflected1.angle_to(pygame.math.Vector2(0, -1))
                 vehicles[j].direction = reflected2.angle_to(pygame.math.Vector2(0, -1))
