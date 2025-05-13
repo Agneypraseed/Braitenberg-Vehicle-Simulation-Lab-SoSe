@@ -41,14 +41,10 @@ class Vehicle:
         # sensor
         self.sensor_radius = 15
         self.sensor_spacing = 50
-        self.sensor_offset = self.radius + self.sensor_radius
-
-        self.left_sensor_position = self.position + \
-            pygame.math.Vector2(0, -self.sensor_offset) + \
-            pygame.math.Vector2(1, -self.sensor_spacing)
-        self.right_sensor_position = self.position + \
-            pygame.math.Vector2(0, -self.sensor_offset) + \
-            pygame.math.Vector2(1, -self.sensor_spacing)
+        self.sensor_offset = self.radius + self.sensor_radius                
+        
+        self.left_sensor_position = self.position
+        self.right_sensor_position = self.position
         self.sensor_color = GREEN
 
     def update_direction(self):
@@ -64,23 +60,17 @@ class Vehicle:
                            self.right_sensor_position, self.sensor_radius)
 
     def calculate_sensor_position(self, sun_position):
-        return self.sensor_position.distance_to(sun_position)
+        return self.position.distance_to(sun_position)
 
-    def keep_in_bounds(self):
-        """Keep vehicle within screen boundaries"""
-        self.position.x = max(self.radius, min(
-            WIDTH - self.radius, self.position.x))
-        self.position.y = max(self.radius, min(
-            HEIGHT - self.radius, self.position.y))
 
-    def normalize_direction(self):
-        """Normalize direction to be between 0 and 360 degrees"""
-        self.direction = self.direction % 360
+    def move(self, sun_position):        
 
-    def move(self, sun_position):
 
         forward_direction = pygame.math.Vector2(0, -1).rotate(self.direction)
         right_direction = forward_direction.rotate(-90)
+
+        self.left_sensor_position = self.position + forward_direction * self.sensor_offset + right_direction * (self.sensor_spacing / 2)
+        self.right_sensor_position = self.position + forward_direction * self.sensor_offset - right_direction * (self.sensor_spacing / 2)
 
         left_distance = self.left_sensor_position.distance_to(sun_position)
         right_distance = self.right_sensor_position.distance_to(sun_position)
@@ -89,7 +79,9 @@ class Vehicle:
         right_speed = self.speed_scalling * (1/right_distance)
 
         speed = (left_speed + right_speed) / 2  # Average speed
+        # For vehicle 2b (Love): Crossed connections
         rotation = (right_speed - left_speed) * self.rotation_scalling 
+        # For vehicle 2a (Fear): Normal connections
         # rotation = (right_speed - left_speed) * self.rotation_scalling *-1
         self.direction += rotation
         direction = pygame.math.Vector2(0, -1).rotate(self.direction)
@@ -106,8 +98,6 @@ class Vehicle:
         
         self.direction += random.randint(-5, 5)
 
-        self.keep_in_bounds()
-        self.normalize_direction()
 
         # debug/print info
         text = font.render(
