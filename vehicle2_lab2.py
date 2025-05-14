@@ -38,6 +38,8 @@ class Vehicle:
         self.speed_scalling = 100
         self.rotation_scalling = 5
 
+        self.is_love = True
+
         # sensor
         self.sensor_radius = 15
         self.sensor_spacing = 50
@@ -84,11 +86,19 @@ class Vehicle:
 
         speed = (left_speed + right_speed) / 2  # Average speed
 
-        # For vehicle 2b (Love): Crossed connections
-        rotation = (right_speed - left_speed) * self.rotation_scalling
+        # # For vehicle 2b (Love): Crossed connections
+        # rotation = (right_speed - left_speed) * self.rotation_scalling
 
-        # For vehicle 2a (Fear): Normal connections
-        # rotation = (right_speed - left_speed) * self.rotation_scalling *-1
+        # # For vehicle 2a (Fear): Normal connections
+        # # rotation = (right_speed - left_speed) * self.rotation_scalling *-1
+
+        if self.is_love:
+            rotation = (right_speed - left_speed) * \
+                self.rotation_scalling  # Vehicle 2b (Love)
+        else:
+            rotation = (left_speed - right_speed) * \
+                self.rotation_scalling  # Vehicle 2a (Fear)
+
         self.direction += rotation
         direction = pygame.math.Vector2(0, -1).rotate(self.direction)
 
@@ -107,8 +117,13 @@ class Vehicle:
         self.update_direction()
 
         # debug/print info
+        # text = font.render(
+        #     f"Left Distance to sun: {left_distance:.2f} Right Distance to sun: {right_distance:.2f} Speed: {speed:.2f}", True, WHITE)
+        # screen.blit(text, (10, 10))
+        behavior = "Love (2b)" if self.is_love else "Fear (2a)"
         text = font.render(
-            f"Left Distance to sun: {left_distance:.2f} Right Distance to sun: {right_distance:.2f} Speed: {speed:.2f}", True, WHITE)
+            f"Behavior: {behavior} | Left Distance: {left_distance:.2f} Right Distance: {right_distance:.2f} Speed: {speed:.2f}",
+            True, WHITE)
         screen.blit(text, (10, 10))
 
 
@@ -120,6 +135,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                vehicle.is_love = not vehicle.is_love  # Toggle behavior
 
     screen.fill((0, 0, 0))  # Fill with black background
     # circle.move()
