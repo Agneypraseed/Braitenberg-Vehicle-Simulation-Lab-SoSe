@@ -20,7 +20,7 @@ GREEN = (0, 255, 0)
 
 FRICTION = False
 INHIBITION = True
-CROSS = True
+CROSS = True 
 
 
 class Circle:
