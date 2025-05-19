@@ -114,8 +114,9 @@ class Vehicle:
         if FRICTION:
             self.update_direction()
 
+        behavior = "Permanent Love (3a)" if not CROSS else "Explorer (3b)"
         text1 = font.render(
-            f"Cross: {CROSS} | Inhibition: {INHIBITION} | Friction: {FRICTION}",
+            f"Behavior: {behavior} | Cross: {CROSS} | Inhibition: {INHIBITION} | Friction: {FRICTION}",
             True, WHITE)
         text2 = font.render(
             f"Left Distance: {left_distance:.2f} Right Distance: {right_distance:.2f} Speed: {speed:.2f}",
