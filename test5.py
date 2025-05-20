@@ -1,10 +1,10 @@
-import math
 import random
+import math
 import pygame
 
 pygame.init()
 
-WIDTH, HEIGHT = 1200, 800
+WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Braitenberg Vehicle 4 Simulation")
 
@@ -19,28 +19,7 @@ YELLOW = (255, 255, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
-FRICTION = True
-INHIBITION = True
-CROSS = False
-
-VEHICLE_TYPE = "4a"
-
-# Use a Gaussian function to model the response of the vehicle to the light source for Vehicle 4a
-def response_4a(d):
-    optimal = 500
-    sigma = 80
-    return math.exp(-((d - optimal)**2) / (2 * sigma**2))
-
-# Use a threshold-based activation function for Vehicle 4b
-def inverse_distance(distance):
-    if distance == 0:
-        return float('inf')  # Avoid division by zero
-    return 1 / distance
-
-
-def threshold(d):
-    return inverse_distance(d) if d > 150 else 0
-
+VEHICLE_TYPE = "4a"  # Change to "4b" for threshold behavior
 
 class Circle:
     def __init__(self, position, radius=30, color=RED):
@@ -58,8 +37,8 @@ class Vehicle:
         self.direction = direction
         self.radius = radius
         self.color = color
-        self.speed_scalling = 100
-        self.rotation_scalling = 5
+        self.speed_scaling = 100
+        self.rotation_scaling = 5
 
         # sensor
         self.sensor_radius = 15
@@ -76,67 +55,65 @@ class Vehicle:
 
         self.sensor_color = GREEN
 
-    def update_direction(self):
-        self.direction += random.randint(-5, 5)
-
     def draw(self, surface):
         pygame.draw.circle(surface, self.color, self.position, self.radius)
-
         pygame.draw.circle(surface, self.sensor_color,
                            self.left_sensor_position, self.sensor_radius)
-
         pygame.draw.circle(surface, self.sensor_color,
                            self.right_sensor_position, self.sensor_radius)
 
-    def calculate_sensor_position(self, sun_position):
-        return self.position.distance_to(sun_position)
+    def sensor_response_4a(self, distance):
+        # Gaussian-like non-monotonic response: peak at optimal distance
+        optimal_distance = 15
+        sigma = 80
+        return math.exp(-((distance - optimal_distance) ** 2) / (2 * sigma ** 2))
+
+    def sensor_response_4b(self, distance):
+        # Step function: no response below threshold, then full speed
+        threshold = 200
+        if distance > threshold:
+            return 0
+        else:
+            return 1
 
     def move(self, sun_position):
-
         forward_direction = pygame.math.Vector2(0, -1).rotate(self.direction)
         right_direction = forward_direction.rotate(-90)
+
+        self.left_sensor_position = self.position + forward_direction * \
+            self.sensor_offset + right_direction * (self.sensor_spacing/2)
+        self.right_sensor_position = self.position + forward_direction * \
+            self.sensor_offset - right_direction * (self.sensor_spacing/2)
 
         left_distance = self.left_sensor_position.distance_to(sun_position)
         right_distance = self.right_sensor_position.distance_to(sun_position)
 
-        left_speed = self.speed_scalling * response_4a(left_distance)
-        right_speed = self.speed_scalling * response_4a(right_distance)
+        if VEHICLE_TYPE == "4a":
+            left_response = self.sensor_response_4a(left_distance)
+            right_response = self.sensor_response_4a(right_distance)
+        elif VEHICLE_TYPE == "4b":
+            left_response = self.sensor_response_4b(left_distance)
+            right_response = self.sensor_response_4b(right_distance)
 
-        speed = (left_speed + right_speed) / 2  # Average speed
+        left_speed = self.speed_scaling * left_response
+        right_speed = self.speed_scaling * right_response
 
-        if INHIBITION:
-            speed = 1 - speed
-
-        rotation = (right_speed - left_speed) * \
-            self.rotation_scalling
-        if CROSS:
-            rotation *= -1
+        speed = (left_speed + right_speed) / 2
+        rotation = (right_speed - left_speed) * self.rotation_scaling
 
         self.direction += rotation
         direction = pygame.math.Vector2(0, -1).rotate(self.direction)
-
         self.position += direction * speed
 
         # Screen Wrapping
         self.position.x %= WIDTH
         self.position.y %= HEIGHT
 
-        self.left_sensor_position = self.position + forward_direction * \
-            self.sensor_offset + right_direction * (self.sensor_spacing/2)
-
-        self.right_sensor_position = self.position + forward_direction * \
-            self.sensor_offset - right_direction * (self.sensor_spacing/2)
-
-        if FRICTION:
-            self.update_direction()
-
         behavior = f"Vehicle {VEHICLE_TYPE.upper()}"
         text1 = font.render(
-            f" behaviour: {behavior} | Cross: {CROSS} | Inhibition: {INHIBITION} | Friction: {FRICTION}",
-            True, WHITE)
+            f"Behavior: {behavior}", True, WHITE)
         text2 = font.render(
-            f"Left Distance: {left_distance:.2f} Right Distance: {right_distance:.2f} Speed: {speed:.2f}",
-            True, WHITE)
+            f"Left D: {left_distance:.2f} Right D: {right_distance:.2f} Speed: {speed:.2f}", True, WHITE)
 
         screen.blit(text1, (10, 10))
         screen.blit(text2, (10, 40))
@@ -151,21 +128,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_c:
-                CROSS = not CROSS
-            elif event.key == pygame.K_i:
-                INHIBITION = not INHIBITION
-            elif event.key == pygame.K_f:
-                FRICTION = not FRICTION
+            if event.key == pygame.K_v:
+                VEHICLE_TYPE = "4b" if VEHICLE_TYPE == "4a" else "4a"
 
-    screen.fill((0, 0, 0))  # Fill with black background
-    # circle.move()
+    screen.fill((0, 0, 0))
     sun.draw(screen)
     vehicle.move(sun.position)
     vehicle.draw(screen)
 
     pygame.display.flip()
-
     clock.tick(fps)
 
 pygame.quit()
