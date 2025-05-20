@@ -20,7 +20,7 @@ GREEN = (0, 255, 0)
 
 FRICTION = False
 INHIBITION = True
-CROSS = True 
+CROSS = True
 
 
 class Circle:
@@ -49,9 +49,6 @@ class Vehicle:
 
         forward_direction = pygame.math.Vector2(0, -1).rotate(self.direction)
         right_direction = forward_direction.rotate(-90)
-
-        # forward_direction = (0, -1)
-        # right_direction = (1, 0)
 
         self.left_sensor_position = self.position + forward_direction * \
             self.sensor_offset - right_direction * (self.sensor_spacing/2)
