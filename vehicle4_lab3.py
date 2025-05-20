@@ -19,19 +19,25 @@ YELLOW = (255, 255, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
-FRICTION = True
+FRICTION = False
 INHIBITION = True
 CROSS = True
 
 VEHICLE_TYPE = "4a"
 
 # Use a Gaussian function to model the response of the vehicle to the light source for Vehicle 4a
+
+
 def response_4a(d):
+    if d < 1:  # Avoid division by zero
+        return 0  # Too close, minimal response
     optimal = 400
     sigma = 30
     return math.exp(-((d - optimal)**2) / (2 * sigma**2))
 
 # Use a threshold-based activation function for Vehicle 4b
+
+
 def inverse_distance(distance):
     if distance == 0:
         return float('inf')  # Avoid division by zero
@@ -99,8 +105,15 @@ class Vehicle:
         left_distance = self.left_sensor_position.distance_to(sun_position)
         right_distance = self.right_sensor_position.distance_to(sun_position)
 
-        left_speed = self.speed_scalling * response_4a(left_distance)
-        right_speed = self.speed_scalling * response_4a(right_distance)
+        if VEHICLE_TYPE == "4a":
+            left_response = response_4a(left_distance)
+            right_response = response_4a(right_distance)
+        elif VEHICLE_TYPE == "4b":
+            left_response = threshold(left_distance)
+            right_response = threshold(right_distance)
+
+        left_speed = self.speed_scalling * left_response
+        right_speed = self.speed_scalling * right_response
 
         speed = (left_speed + right_speed) / 2  # Average speed
 
@@ -151,7 +164,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_c:
+            if event.key == pygame.K_v:
+                VEHICLE_TYPE = "4b" if VEHICLE_TYPE == "4a" else "4a"
+            elif event.key == pygame.K_c:
                 CROSS = not CROSS
             elif event.key == pygame.K_i:
                 INHIBITION = not INHIBITION
