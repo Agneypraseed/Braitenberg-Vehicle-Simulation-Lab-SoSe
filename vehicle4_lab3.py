@@ -21,14 +21,14 @@ GREEN = (0, 255, 0)
 
 FRICTION = True
 INHIBITION = True
-CROSS = False
+CROSS = True
 
 VEHICLE_TYPE = "4a"
 
 # Use a Gaussian function to model the response of the vehicle to the light source for Vehicle 4a
 def response_4a(d):
-    optimal = 500
-    sigma = 80
+    optimal = 400
+    sigma = 30
     return math.exp(-((d - optimal)**2) / (2 * sigma**2))
 
 # Use a threshold-based activation function for Vehicle 4b
