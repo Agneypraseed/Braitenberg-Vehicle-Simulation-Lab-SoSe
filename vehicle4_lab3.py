@@ -45,7 +45,7 @@ def inverse_distance(distance):
 
 
 def threshold(d):
-    return inverse_distance(d) if d > 150 else 0
+    return inverse_distance(d) if d > 350 else 0
 
 
 class Circle:
